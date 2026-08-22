@@ -18,6 +18,13 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.pre('save', function normalizeEmail(next) {
+  if (this.isModified('email') && this.email) {
+    this.email = this.email.trim().toLowerCase();
+  }
+  next();
+});
+
 userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
 

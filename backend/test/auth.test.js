@@ -17,12 +17,20 @@ const testPassword = 'password123';
 
 describe('Auth routes', () => {
   before(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    try {
+      const uri = process.env.MONGO_URI_TEST || process.env.MONGO_URI;
+      await mongoose.connect(uri);
+    } catch (err) {
+      throw err;
+    }
   });
 
   after(async () => {
-    await User.deleteMany({ email: testEmail });
-    await mongoose.connection.close();
+    try {
+      await User.deleteMany({ email: testEmail });
+    } finally {
+      await mongoose.connection.close();
+    }
   });
 
   describe('POST /api/auth/register', () => {

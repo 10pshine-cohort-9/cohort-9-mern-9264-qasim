@@ -17,7 +17,8 @@ async function register(req, res, next) {
   try {
     checkValidation(req);
 
-    const { email, password } = req.body;
+    const email = String(req.body.email).toLowerCase().trim();
+    const { password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -26,7 +27,18 @@ async function register(req, res, next) {
       throw err;
     }
 
-    const user = await User.create({ email, password });
+    let user;
+    try {
+      user = await User.create({ email, password });
+    } catch (err) {
+      if (err.code === 11000) {
+        const duplicateErr = new Error('Email is already registered');
+        duplicateErr.statusCode = 409;
+        throw duplicateErr;
+      }
+      throw err;
+    }
+
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -42,7 +54,8 @@ async function login(req, res, next) {
   try {
     checkValidation(req);
 
-    const { email, password } = req.body;
+    const email = String(req.body.email).toLowerCase().trim();
+    const { password } = req.body;
 
     const user = await User.findOne({ email });
     const isMatch = user ? await bcrypt.compare(password, user.password) : false;
