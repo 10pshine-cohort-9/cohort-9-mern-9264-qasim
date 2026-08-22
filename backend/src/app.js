@@ -8,7 +8,7 @@ const healthRoutes = require('./routes/health.routes');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
 app.use(pinoHttp({ logger }));
 
