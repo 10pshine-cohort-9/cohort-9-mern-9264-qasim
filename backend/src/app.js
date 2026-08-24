@@ -5,6 +5,7 @@ const pinoHttp = require('pino-http');
 const logger = require('./config/logger');
 const errorHandler = require('./middleware/errorHandler');
 const healthRoutes = require('./routes/health.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(pinoHttp({ logger }));
 
 app.use('/health', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: { message: 'Not found' } });
