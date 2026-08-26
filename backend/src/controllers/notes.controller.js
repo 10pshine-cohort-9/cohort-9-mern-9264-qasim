@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Note = require('../models/Note');
 
 function notFoundError() {
@@ -40,6 +42,8 @@ async function getNotes(req, res, next) {
 
 async function getNoteById(req, res, next) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) throw notFoundError();
+
     const note = await Note.findById(req.params.id);
 
     if (!note) throw notFoundError();
@@ -53,6 +57,8 @@ async function getNoteById(req, res, next) {
 
 async function updateNote(req, res, next) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) throw notFoundError();
+
     const note = await Note.findById(req.params.id);
 
     if (!note) throw notFoundError();
@@ -71,6 +77,8 @@ async function updateNote(req, res, next) {
 
 async function deleteNote(req, res, next) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) throw notFoundError();
+
     const note = await Note.findById(req.params.id);
 
     if (!note) throw notFoundError();

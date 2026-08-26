@@ -24,19 +24,24 @@ let userBId;
 
 describe('Notes routes', () => {
   before(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
 
-    const registerA = await request(app)
-      .post('/api/auth/register')
-      .send({ email: userAEmail, password });
-    tokenA = registerA.body.token;
-    userAId = registerA.body.user.id;
+      const registerA = await request(app)
+        .post('/api/auth/register')
+        .send({ email: userAEmail, password });
+      tokenA = registerA.body.token;
+      userAId = registerA.body.user.id;
 
-    const registerB = await request(app)
-      .post('/api/auth/register')
-      .send({ email: userBEmail, password });
-    tokenB = registerB.body.token;
-    userBId = registerB.body.user.id;
+      const registerB = await request(app)
+        .post('/api/auth/register')
+        .send({ email: userBEmail, password });
+      tokenB = registerB.body.token;
+      userBId = registerB.body.user.id;
+    } catch (err) {
+      console.error('Notes test setup failed:', err);
+      throw err;
+    }
   });
 
   after(async () => {
@@ -114,6 +119,14 @@ describe('Notes routes', () => {
       const missingId = new mongoose.Types.ObjectId();
       const res = await request(app)
         .get(`/api/notes/${missingId}`)
+        .set('Authorization', `Bearer ${tokenA}`);
+
+      expect(res.status).to.equal(404);
+    });
+
+    it('returns 404 for a malformed id', async () => {
+      const res = await request(app)
+        .get('/api/notes/not-a-valid-id')
         .set('Authorization', `Bearer ${tokenA}`);
 
       expect(res.status).to.equal(404);
