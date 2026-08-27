@@ -16,7 +16,13 @@ function NoteEditor() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!isEditing) return;
+    if (!isEditing) {
+      setTitle('');
+      setContent('');
+      setError('');
+      setLoading(false);
+      return;
+    }
 
     let active = true;
     setLoading(true);
