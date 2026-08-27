@@ -60,6 +60,7 @@ describe('Notes routes', () => {
       expect(res.status).to.equal(201);
       expect(res.body.title).to.equal('First note');
       expect(res.body.owner).to.equal(userAId);
+      expect(res.body.tags).to.deep.equal([]);
     });
 
     it('rejects note creation without a token', async () => {
@@ -68,6 +69,16 @@ describe('Notes routes', () => {
         .send({ title: 'No auth', content: 'Should fail' });
 
       expect(res.status).to.equal(401);
+    });
+
+    it('creates a note with tags', async () => {
+      const res = await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Tagged note', content: 'Has tags', tags: ['work', ' urgent ', ''] });
+
+      expect(res.status).to.equal(201);
+      expect(res.body.tags).to.deep.equal(['work', 'urgent']);
     });
   });
 
@@ -153,6 +164,16 @@ describe('Notes routes', () => {
       expect(res.status).to.equal(200);
       expect(res.body.title).to.equal('Updated title');
       expect(res.body.content).to.equal('Original content');
+    });
+
+    it('updates a note\'s tags', async () => {
+      const res = await request(app)
+        .put(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ tags: ['personal'] });
+
+      expect(res.status).to.equal(200);
+      expect(res.body.tags).to.deep.equal(['personal']);
     });
 
     it('returns 404 when updating a note that does not exist', async () => {
