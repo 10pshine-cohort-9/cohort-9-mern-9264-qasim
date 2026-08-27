@@ -242,6 +242,11 @@ body {
   min-height: 180px;
 }
 
+.editor-content .ProseMirror:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
 .note-editor-actions {
   display: flex;
   justify-content: flex-end;

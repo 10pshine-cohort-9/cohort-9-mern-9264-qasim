@@ -21,6 +21,9 @@ function NoteEditor() {
     async function loadNote() {
       try {
         const note = await fetchNoteById(id);
+        if (!note || typeof note.title !== 'string' || typeof note.content !== 'string') {
+          throw new Error('Invalid note data');
+        }
         setTitle(note.title);
         setContent(note.content);
       } catch {

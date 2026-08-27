@@ -7,7 +7,7 @@ function RichTextEditor({ content, onChange }) {
     extensions: [StarterKit, Underline],
     content: content || '',
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.isEmpty ? '' : editor.getHTML());
     },
   });
 
