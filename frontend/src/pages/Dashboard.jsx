@@ -40,6 +40,7 @@ function Dashboard() {
     const confirmed = window.confirm('Delete this note? This cannot be undone.');
     if (!confirmed) return;
 
+    setError('');
     try {
       await deleteNote(id);
       setNotes((prev) => prev.filter((note) => note._id !== id));
