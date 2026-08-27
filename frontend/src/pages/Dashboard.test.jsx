@@ -138,4 +138,84 @@ describe('Dashboard', () => {
 
     expect(await screen.findByText(/no notes match your search/i)).toBeInTheDocument();
   });
+
+  test('export button is disabled when there are no notes', async () => {
+    notesApi.fetchNotes.mockResolvedValue([]);
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/no notes yet/i);
+    expect(screen.getByText('Export')).toBeDisabled();
+  });
+
+  test('exports notes as a downloadable JSON file', async () => {
+    notesApi.fetchNotes.mockResolvedValue([
+      { _id: '1', title: 'Grocery list', content: '<p>Milk and eggs</p>' },
+    ]);
+
+    global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+    global.URL.revokeObjectURL = jest.fn();
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Grocery list');
+
+    fireEvent.click(screen.getByText('Export'));
+
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+    expect(global.URL.revokeObjectURL).toHaveBeenCalled();
+  });
+
+  test('imports valid notes from a JSON file', async () => {
+    notesApi.fetchNotes.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      { _id: '1', title: 'Imported note', content: 'Imported content' },
+    ]);
+    notesApi.createNote.mockResolvedValue({ _id: '1', title: 'Imported note', content: 'Imported content' });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/no notes yet/i);
+
+    const fileContent = JSON.stringify([{ title: 'Imported note', content: 'Imported content' }]);
+    const file = new File([fileContent], 'notes-export.json', { type: 'application/json' });
+
+    const input = screen.getByTestId('import-file-input');
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(notesApi.createNote).toHaveBeenCalledWith('Imported note', 'Imported content');
+    });
+
+    expect(await screen.findByText('Imported note')).toBeInTheDocument();
+  });
+
+  test('shows an error when importing an invalid file', async () => {
+    notesApi.fetchNotes.mockResolvedValue([]);
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/no notes yet/i);
+
+    const file = new File(['not valid json'], 'bad.json', { type: 'application/json' });
+    const input = screen.getByTestId('import-file-input');
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText(/could not import notes/i)).toBeInTheDocument();
+  });
 });
