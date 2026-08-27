@@ -18,22 +18,31 @@ function NoteEditor() {
   useEffect(() => {
     if (!isEditing) return;
 
+    let active = true;
+    setLoading(true);
+    setError('');
+
     async function loadNote() {
       try {
         const note = await fetchNoteById(id);
+        if (!active) return;
         if (!note || typeof note.title !== 'string' || typeof note.content !== 'string') {
           throw new Error('Invalid note data');
         }
         setTitle(note.title);
         setContent(note.content);
       } catch {
-        setError('Could not load note');
+        if (active) setError('Could not load note');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
     loadNote();
+
+    return () => {
+      active = false;
+    };
   }, [id, isEditing]);
 
   async function handleSave(e) {

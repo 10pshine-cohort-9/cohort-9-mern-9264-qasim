@@ -14,6 +14,7 @@ function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +27,20 @@ function Dashboard() {
   }, []);
 
   async function loadNotes() {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError('');
     try {
       const data = await fetchNotes();
+      if (requestId !== requestIdRef.current) return;
       setNotes(data);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setError('Could not load notes');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -108,11 +114,23 @@ function Dashboard() {
         throw new Error('No valid notes found in file');
       }
 
+      let successCount = 0;
+      let failCount = 0;
+
       for (const item of validItems) {
-        await createNote(item.title, item.content);
+        try {
+          await createNote(item.title, item.content);
+          successCount += 1;
+        } catch {
+          failCount += 1;
+        }
       }
 
       await loadNotes();
+
+      if (failCount > 0) {
+        setError(`Imported ${successCount} of ${validItems.length} notes. ${failCount} failed.`);
+      }
     } catch {
       setError('Could not import notes. Make sure the file is a valid export.');
     } finally {

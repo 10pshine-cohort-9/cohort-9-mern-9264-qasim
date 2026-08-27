@@ -38,7 +38,12 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText(/no notes yet/i)).toBeInTheDocument();
+    try {
+      expect(await screen.findByText(/no notes yet/i)).toBeInTheDocument();
+    } catch (err) {
+      console.error('shows empty state when there are no notes: assertion failed', err);
+      throw err;
+    }
   });
 
   test('renders a list of notes', async () => {
@@ -53,8 +58,13 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('First note')).toBeInTheDocument();
-    expect(screen.getByText('Second note')).toBeInTheDocument();
+    try {
+      expect(await screen.findByText('First note')).toBeInTheDocument();
+      expect(screen.getByText('Second note')).toBeInTheDocument();
+    } catch (err) {
+      console.error('renders a list of notes: assertion failed', err);
+      throw err;
+    }
   });
 
   test('deletes a note after confirmation', async () => {
@@ -70,12 +80,17 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    const deleteButton = await screen.findByText('Delete');
-    fireEvent.click(deleteButton);
+    try {
+      const deleteButton = await screen.findByText('Delete');
+      fireEvent.click(deleteButton);
 
-    await waitFor(() => {
-      expect(notesApi.deleteNote).toHaveBeenCalledWith('1');
-    });
+      await waitFor(() => {
+        expect(notesApi.deleteNote).toHaveBeenCalledWith('1');
+      });
+    } catch (err) {
+      console.error('deletes a note after confirmation: assertion failed', err);
+      throw err;
+    }
   });
 
   test('filters notes by title as the user types', async () => {
@@ -90,13 +105,18 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText('Grocery list');
+    try {
+      await screen.findByText('Grocery list');
 
-    const searchInput = screen.getByPlaceholderText(/search notes/i);
-    fireEvent.change(searchInput, { target: { value: 'grocery' } });
+      const searchInput = screen.getByPlaceholderText(/search notes/i);
+      fireEvent.change(searchInput, { target: { value: 'grocery' } });
 
-    expect(screen.getByText('Grocery list')).toBeInTheDocument();
-    expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument();
+      expect(screen.getByText('Grocery list')).toBeInTheDocument();
+      expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument();
+    } catch (err) {
+      console.error('filters notes by title as the user types: assertion failed', err);
+      throw err;
+    }
   });
 
   test('filters notes by content when title does not match', async () => {
@@ -111,13 +131,18 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText('Grocery list');
+    try {
+      await screen.findByText('Grocery list');
 
-    const searchInput = screen.getByPlaceholderText(/search notes/i);
-    fireEvent.change(searchInput, { target: { value: 'budget' } });
+      const searchInput = screen.getByPlaceholderText(/search notes/i);
+      fireEvent.change(searchInput, { target: { value: 'budget' } });
 
-    expect(screen.getByText('Meeting notes')).toBeInTheDocument();
-    expect(screen.queryByText('Grocery list')).not.toBeInTheDocument();
+      expect(screen.getByText('Meeting notes')).toBeInTheDocument();
+      expect(screen.queryByText('Grocery list')).not.toBeInTheDocument();
+    } catch (err) {
+      console.error('filters notes by content when title does not match: assertion failed', err);
+      throw err;
+    }
   });
 
   test('shows a no-match message when search has no results', async () => {
@@ -131,12 +156,17 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText('Grocery list');
+    try {
+      await screen.findByText('Grocery list');
 
-    const searchInput = screen.getByPlaceholderText(/search notes/i);
-    fireEvent.change(searchInput, { target: { value: 'zzzzz' } });
+      const searchInput = screen.getByPlaceholderText(/search notes/i);
+      fireEvent.change(searchInput, { target: { value: 'zzzzz' } });
 
-    expect(await screen.findByText(/no notes match your search/i)).toBeInTheDocument();
+      expect(await screen.findByText(/no notes match your search/i)).toBeInTheDocument();
+    } catch (err) {
+      console.error('shows a no-match message when search has no results: assertion failed', err);
+      throw err;
+    }
   });
 
   test('export button is disabled when there are no notes', async () => {
@@ -148,8 +178,13 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText(/no notes yet/i);
-    expect(screen.getByText('Export')).toBeDisabled();
+    try {
+      await screen.findByText(/no notes yet/i);
+      expect(screen.getByText('Export')).toBeDisabled();
+    } catch (err) {
+      console.error('export button is disabled when there are no notes: assertion failed', err);
+      throw err;
+    }
   });
 
   test('exports notes as a downloadable JSON file', async () => {
@@ -166,12 +201,17 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText('Grocery list');
+    try {
+      await screen.findByText('Grocery list');
 
-    fireEvent.click(screen.getByText('Export'));
+      fireEvent.click(screen.getByText('Export'));
 
-    expect(global.URL.createObjectURL).toHaveBeenCalled();
-    expect(global.URL.revokeObjectURL).toHaveBeenCalled();
+      expect(global.URL.createObjectURL).toHaveBeenCalled();
+      expect(global.URL.revokeObjectURL).toHaveBeenCalled();
+    } catch (err) {
+      console.error('exports notes as a downloadable JSON file: assertion failed', err);
+      throw err;
+    }
   });
 
   test('imports valid notes from a JSON file', async () => {
@@ -186,19 +226,24 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText(/no notes yet/i);
+    try {
+      await screen.findByText(/no notes yet/i);
 
-    const fileContent = JSON.stringify([{ title: 'Imported note', content: 'Imported content' }]);
-    const file = new File([fileContent], 'notes-export.json', { type: 'application/json' });
+      const fileContent = JSON.stringify([{ title: 'Imported note', content: 'Imported content' }]);
+      const file = new File([fileContent], 'notes-export.json', { type: 'application/json' });
 
-    const input = screen.getByTestId('import-file-input');
-    fireEvent.change(input, { target: { files: [file] } });
+      const input = screen.getByTestId('import-file-input');
+      fireEvent.change(input, { target: { files: [file] } });
 
-    await waitFor(() => {
-      expect(notesApi.createNote).toHaveBeenCalledWith('Imported note', 'Imported content');
-    });
+      await waitFor(() => {
+        expect(notesApi.createNote).toHaveBeenCalledWith('Imported note', 'Imported content');
+      });
 
-    expect(await screen.findByText('Imported note')).toBeInTheDocument();
+      expect(await screen.findByText('Imported note')).toBeInTheDocument();
+    } catch (err) {
+      console.error('imports valid notes from a JSON file: assertion failed', err);
+      throw err;
+    }
   });
 
   test('shows an error when importing an invalid file', async () => {
@@ -210,12 +255,17 @@ describe('Dashboard', () => {
       </MemoryRouter>
     );
 
-    await screen.findByText(/no notes yet/i);
+    try {
+      await screen.findByText(/no notes yet/i);
 
-    const file = new File(['not valid json'], 'bad.json', { type: 'application/json' });
-    const input = screen.getByTestId('import-file-input');
-    fireEvent.change(input, { target: { files: [file] } });
+      const file = new File(['not valid json'], 'bad.json', { type: 'application/json' });
+      const input = screen.getByTestId('import-file-input');
+      fireEvent.change(input, { target: { files: [file] } });
 
-    expect(await screen.findByText(/could not import notes/i)).toBeInTheDocument();
+      expect(await screen.findByText(/could not import notes/i)).toBeInTheDocument();
+    } catch (err) {
+      console.error('shows an error when importing an invalid file: assertion failed', err);
+      throw err;
+    }
   });
 });

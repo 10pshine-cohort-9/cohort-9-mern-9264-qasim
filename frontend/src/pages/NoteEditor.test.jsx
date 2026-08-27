@@ -42,10 +42,15 @@ describe('NoteEditor', () => {
   test('shows validation error when saving without title or content', async () => {
     renderNewNote();
 
-    fireEvent.click(screen.getByText('Save'));
+    try {
+      fireEvent.click(screen.getByText('Save'));
 
-    expect(await screen.findByText(/title and content are required/i)).toBeInTheDocument();
-    expect(notesApi.createNote).not.toHaveBeenCalled();
+      expect(await screen.findByText(/title and content are required/i)).toBeInTheDocument();
+      expect(notesApi.createNote).not.toHaveBeenCalled();
+    } catch (err) {
+      console.error('shows validation error when saving without title or content: assertion failed', err);
+      throw err;
+    }
   });
 
   test('creates a new note with title and content', async () => {
@@ -53,16 +58,21 @@ describe('NoteEditor', () => {
 
     renderNewNote();
 
-    fireEvent.change(screen.getByPlaceholderText('Note title'), {
-      target: { value: 'My note' },
-    });
-    fireEvent.change(screen.getByTestId('mock-editor'), {
-      target: { value: 'Hello' },
-    });
-    fireEvent.click(screen.getByText('Save'));
+    try {
+      fireEvent.change(screen.getByPlaceholderText('Note title'), {
+        target: { value: 'My note' },
+      });
+      fireEvent.change(screen.getByTestId('mock-editor'), {
+        target: { value: 'Hello' },
+      });
+      fireEvent.click(screen.getByText('Save'));
 
-    await waitFor(() => {
-      expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello');
-    });
+      await waitFor(() => {
+        expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello');
+      });
+    } catch (err) {
+      console.error('creates a new note with title and content: assertion failed', err);
+      throw err;
+    }
   });
 });
