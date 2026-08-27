@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext.jsx';
@@ -17,6 +17,7 @@ function Dashboard() {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadNotes();
@@ -52,6 +53,17 @@ function Dashboard() {
     navigate('/login');
   }
 
+  const filteredNotes = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return notes;
+
+    return notes.filter((note) => {
+      const titleMatch = note.title?.toLowerCase().includes(term);
+      const contentMatch = stripHtml(note.content || '').toLowerCase().includes(term);
+      return titleMatch || contentMatch;
+    });
+  }, [notes, searchTerm]);
+
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
@@ -65,15 +77,29 @@ function Dashboard() {
         </div>
       </header>
 
+      {notes.length > 0 && (
+        <div className="dashboard-search">
+          <input
+            type="text"
+            placeholder="Search notes by title or content..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="dashboard-search-input"
+          />
+        </div>
+      )}
+
       {error && <p className="auth-error">{error}</p>}
 
       {loading ? (
         <p>Loading notes...</p>
       ) : notes.length === 0 ? (
         <p className="dashboard-empty">No notes yet. Create your first one.</p>
+      ) : filteredNotes.length === 0 ? (
+        <p className="dashboard-empty">No notes match your search.</p>
       ) : (
         <ul className="notes-grid">
-          {notes.map((note) => (
+          {filteredNotes.map((note) => (
             <li key={note._id} className="note-card">
               <Link to={`/notes/${note._id}`} className="note-card-link">
                 <h2>{note.title}</h2>
