@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import NoteEditor from './pages/NoteEditor.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 function App() {
@@ -16,6 +17,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notes/new"
+          element={
+            <ProtectedRoute>
+              <NoteEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notes/:id"
+          element={
+            <ProtectedRoute>
+              <NoteEditor />
             </ProtectedRoute>
           }
         />
