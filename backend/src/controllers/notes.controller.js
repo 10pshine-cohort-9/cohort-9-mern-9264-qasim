@@ -14,9 +14,18 @@ function forbiddenError() {
   return err;
 }
 
+function normalizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .filter((tag) => typeof tag === 'string')
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+    .slice(0, 10);
+}
+
 async function createNote(req, res, next) {
   try {
-    const { title, content } = req.body;
+    const { title, content, tags } = req.body;
 
     if (!title || !content) {
       const err = new Error('Title and content are required');
@@ -24,7 +33,12 @@ async function createNote(req, res, next) {
       throw err;
     }
 
-    const note = await Note.create({ title, content, owner: req.user.id });
+    const note = await Note.create({
+      title,
+      content,
+      tags: normalizeTags(tags),
+      owner: req.user.id,
+    });
     res.status(201).json(note);
   } catch (err) {
     next(err);
@@ -64,9 +78,10 @@ async function updateNote(req, res, next) {
     if (!note) throw notFoundError();
     if (note.owner.toString() !== req.user.id) throw forbiddenError();
 
-    const { title, content } = req.body;
+    const { title, content, tags } = req.body;
     if (title !== undefined) note.title = title;
     if (content !== undefined) note.content = content;
+    if (tags !== undefined) note.tags = normalizeTags(tags);
 
     await note.save();
     res.json(note);
