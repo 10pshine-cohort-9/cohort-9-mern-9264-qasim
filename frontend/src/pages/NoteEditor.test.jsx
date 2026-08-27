@@ -12,6 +12,10 @@ jest.mock('../api/notes.js', () => ({
   deleteNote: jest.fn(),
 }));
 
+jest.mock('../context/AuthContext.jsx', () => ({
+  useAuth: () => ({ user: { email: 'test@example.com' }, logout: jest.fn() }),
+}));
+
 jest.mock('../components/RichTextEditor.jsx', () => {
   return function MockRichTextEditor({ content, onChange }) {
     return (

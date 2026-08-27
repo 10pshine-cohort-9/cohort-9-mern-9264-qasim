@@ -29,6 +29,13 @@ function Login() {
 
   return (
     <div className="auth-page">
+      <div className="auth-brand">
+        <span className="brand-mark" aria-hidden="true">N</span>
+        <div>
+          <div className="auth-brand-name">NovaNote</div>
+          <div className="auth-brand-tagline">Capture your thoughts, beautifully organized.</div>
+        </div>
+      </div>
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1>Login</h1>
 
