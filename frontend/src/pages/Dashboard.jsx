@@ -173,6 +173,7 @@ function Dashboard() {
             style={{ display: 'none' }}
             data-testid="import-file-input"
           />
+          <Link to="/profile" className="btn-secondary">Profile</Link>
           <button type="button" onClick={handleLogout} className="btn-secondary">Logout</button>
         </div>
       </header>
