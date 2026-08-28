@@ -77,4 +77,65 @@ describe('Dashboard', () => {
       expect(notesApi.deleteNote).toHaveBeenCalledWith('1');
     });
   });
+
+  test('filters notes by title as the user types', async () => {
+    notesApi.fetchNotes.mockResolvedValue([
+      { _id: '1', title: 'Grocery list', content: '<p>Milk and eggs</p>' },
+      { _id: '2', title: 'Meeting notes', content: '<p>Discuss budget</p>' },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Grocery list');
+
+    const searchInput = screen.getByPlaceholderText(/search notes/i);
+    fireEvent.change(searchInput, { target: { value: 'grocery' } });
+
+    expect(screen.getByText('Grocery list')).toBeInTheDocument();
+    expect(screen.queryByText('Meeting notes')).not.toBeInTheDocument();
+  });
+
+  test('filters notes by content when title does not match', async () => {
+    notesApi.fetchNotes.mockResolvedValue([
+      { _id: '1', title: 'Grocery list', content: '<p>Milk and eggs</p>' },
+      { _id: '2', title: 'Meeting notes', content: '<p>Discuss budget</p>' },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Grocery list');
+
+    const searchInput = screen.getByPlaceholderText(/search notes/i);
+    fireEvent.change(searchInput, { target: { value: 'budget' } });
+
+    expect(screen.getByText('Meeting notes')).toBeInTheDocument();
+    expect(screen.queryByText('Grocery list')).not.toBeInTheDocument();
+  });
+
+  test('shows a no-match message when search has no results', async () => {
+    notesApi.fetchNotes.mockResolvedValue([
+      { _id: '1', title: 'Grocery list', content: '<p>Milk and eggs</p>' },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Grocery list');
+
+    const searchInput = screen.getByPlaceholderText(/search notes/i);
+    fireEvent.change(searchInput, { target: { value: 'zzzzz' } });
+
+    expect(await screen.findByText(/no notes match your search/i)).toBeInTheDocument();
+  });
 });

@@ -252,3 +252,21 @@ body {
   justify-content: flex-end;
   gap: 0.75rem;
 }
+
+.dashboard-search {
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.dashboard-search-input:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
