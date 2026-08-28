@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import AppHeader from '../components/AppHeader.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
+import TagInput from '../components/TagInput.jsx';
 import { createNote, fetchNoteById, updateNote } from '../api/notes.js';
 
 function NoteEditor() {
@@ -11,6 +13,7 @@ function NoteEditor() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +22,7 @@ function NoteEditor() {
     if (!isEditing) {
       setTitle('');
       setContent('');
+      setTags([]);
       setError('');
       setLoading(false);
       return;
@@ -37,6 +41,7 @@ function NoteEditor() {
         }
         setTitle(note.title);
         setContent(note.content);
+        setTags(Array.isArray(note.tags) ? note.tags : []);
       } catch {
         if (active) setError('Could not load note');
       } finally {
@@ -63,9 +68,9 @@ function NoteEditor() {
     setSaving(true);
     try {
       if (isEditing) {
-        await updateNote(id, title, content);
+        await updateNote(id, title, content, tags);
       } else {
-        await createNote(title, content);
+        await createNote(title, content, tags);
       }
       navigate('/dashboard');
     } catch {
@@ -79,26 +84,34 @@ function NoteEditor() {
     navigate('/dashboard');
   }
 
-  if (loading) return <p className="note-editor-loading">Loading note...</p>;
-
   return (
-    <div className="note-editor-page">
-      <h1>{isEditing ? 'Edit Note' : 'New Note'}</h1>
-      {error && <p className="auth-error">{error}</p>}
-      <form onSubmit={handleSave} className="note-editor-form">
-        <input
-          type="text"
-          placeholder="Note title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="note-title-input"
-        />
-        <RichTextEditor content={content} onChange={setContent} />
-        <div className="note-editor-actions">
-          <button type="button" onClick={handleCancel} disabled={saving}>Cancel</button>
-          <button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-        </div>
-      </form>
+    <div className="app-shell">
+      <AppHeader />
+      <div className="note-editor-page">
+        {loading ? (
+          <p className="dashboard-status">Loading note...</p>
+        ) : (
+          <>
+            <h1>{isEditing ? 'Edit note' : 'New note'}</h1>
+            {error && <p className="auth-error">{error}</p>}
+            <form onSubmit={handleSave} className="note-editor-form">
+              <input
+                type="text"
+                placeholder="Note title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="note-title-input"
+              />
+              <TagInput tags={tags} onChange={setTags} />
+              <RichTextEditor content={content} onChange={setContent} />
+              <div className="note-editor-actions">
+                <button type="button" onClick={handleCancel} disabled={saving} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save'}</button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,10 @@ jest.mock('../api/notes.js', () => ({
   deleteNote: jest.fn(),
 }));
 
+jest.mock('../context/AuthContext.jsx', () => ({
+  useAuth: () => ({ user: { email: 'test@example.com' }, logout: jest.fn() }),
+}));
+
 jest.mock('../components/RichTextEditor.jsx', () => {
   return function MockRichTextEditor({ content, onChange }) {
     return (
@@ -68,7 +72,7 @@ describe('NoteEditor', () => {
       fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
-        expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello');
+        expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello', []);
       });
     } catch (err) {
       console.error('creates a new note with title and content: assertion failed', err);
