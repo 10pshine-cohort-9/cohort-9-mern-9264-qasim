@@ -9,6 +9,7 @@ function Profile() {
 
   const [noteCount, setNoteCount] = useState(null);
   const [error, setError] = useState('');
+  const [countFailed, setCountFailed] = useState(false);
 
   useEffect(() => {
     async function loadCount() {
@@ -17,6 +18,7 @@ function Profile() {
         setNoteCount(notes.length);
       } catch {
         setError('Could not load note count');
+        setCountFailed(true);
       }
     }
 
@@ -38,7 +40,9 @@ function Profile() {
           </div>
           <div className="profile-field">
             <span className="profile-label">Total notes</span>
-            <span className="profile-value">{noteCount === null ? 'Loading...' : noteCount}</span>
+            <span className="profile-value">
+              {countFailed ? 'Unavailable' : noteCount === null ? 'Loading...' : noteCount}
+            </span>
           </div>
         </div>
       </div>

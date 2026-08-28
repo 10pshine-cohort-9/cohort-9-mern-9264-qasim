@@ -58,6 +58,7 @@ function TagInput({ tags, onChange }) {
         onKeyDown={handleKeyDown}
         onBlur={addTag}
         placeholder={tags.length === 0 ? 'Add tags (press Enter)' : ''}
+        aria-label="Add tags"
         className="tag-input-field"
       />
     </div>
