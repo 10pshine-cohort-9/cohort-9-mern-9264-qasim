@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
+import Toast from '../components/Toast.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { createNote, deleteNote, fetchNotes } from '../api/notes.js';
 
@@ -12,6 +13,7 @@ function stripHtml(html) {
 }
 
 const CARD_ACCENTS = ['accent-indigo', 'accent-teal', 'accent-coral', 'accent-amber', 'accent-plum'];
+const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plum'];
 
 function getCardAccent(id) {
   let hash = 0;
@@ -19,6 +21,14 @@ function getCardAccent(id) {
     hash = (hash + char.charCodeAt(0)) % CARD_ACCENTS.length;
   }
   return CARD_ACCENTS[hash];
+}
+
+function getTagColor(tag) {
+  let hash = 0;
+  for (const char of String(tag)) {
+    hash = (hash + char.charCodeAt(0)) % TAG_COLORS.length;
+  }
+  return TAG_COLORS[hash];
 }
 
 function getGreeting() {
@@ -58,7 +68,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('updated-desc');
   const [importing, setImporting] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     loadNotes();
@@ -90,6 +102,7 @@ function Dashboard() {
     try {
       await deleteNote(id);
       setNotes((prev) => prev.filter((note) => note._id !== id));
+      setToast('Note deleted.');
     } catch {
       setError('Could not delete note');
     }
@@ -99,6 +112,7 @@ function Dashboard() {
     const exportData = notes.map((note) => ({
       title: note.title,
       content: note.content,
+      tags: note.tags || [],
     }));
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -113,6 +127,7 @@ function Dashboard() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    setToast('Notes exported.');
   }
 
   function handleImportClick() {
@@ -152,7 +167,7 @@ function Dashboard() {
 
       for (const item of validItems) {
         try {
-          await createNote(item.title, item.content);
+          await createNote(item.title, item.content, Array.isArray(item.tags) ? item.tags : []);
           successCount += 1;
         } catch {
           failCount += 1;
@@ -163,6 +178,8 @@ function Dashboard() {
 
       if (failCount > 0) {
         setError(`Imported ${successCount} of ${validItems.length} notes. ${failCount} failed.`);
+      } else {
+        setToast(`Imported ${successCount} note${successCount === 1 ? '' : 's'}.`);
       }
     } catch {
       setError('Could not import notes. Make sure the file is a valid export.');
@@ -179,9 +196,22 @@ function Dashboard() {
     return notes.filter((note) => {
       const titleMatch = note.title?.toLowerCase().includes(term);
       const contentMatch = stripHtml(note.content || '').toLowerCase().includes(term);
-      return titleMatch || contentMatch;
+      const tagMatch = Array.isArray(note.tags) && note.tags.some((tag) => tag.toLowerCase().includes(term));
+      return titleMatch || contentMatch || tagMatch;
     });
   }, [notes, searchTerm]);
+
+  const sortedNotes = useMemo(() => {
+    const arr = [...filteredNotes];
+    if (sortBy === 'updated-asc') {
+      arr.sort((a, b) => new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0));
+    } else if (sortBy === 'title-asc') {
+      arr.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else {
+      arr.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    }
+    return arr;
+  }, [filteredNotes, sortBy]);
 
   return (
     <div className="app-shell">
@@ -212,7 +242,7 @@ function Dashboard() {
         </div>
 
         {notes.length > 0 && (
-          <div className="dashboard-search">
+          <div className="dashboard-controls">
             <input
               type="text"
               placeholder="Search notes by title or content..."
@@ -220,6 +250,16 @@ function Dashboard() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="dashboard-search-input"
             />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="dashboard-sort-select"
+              aria-label="Sort notes"
+            >
+              <option value="updated-desc">Recently updated</option>
+              <option value="updated-asc">Oldest first</option>
+              <option value="title-asc">Title A-Z</option>
+            </select>
           </div>
         )}
 
@@ -240,31 +280,56 @@ function Dashboard() {
             <p className="empty-state-subtitle">Create your first note to get started.</p>
             <Link to="/notes/new" className="btn-primary">+ New note</Link>
           </div>
-        ) : filteredNotes.length === 0 ? (
+        ) : sortedNotes.length === 0 ? (
           <p className="dashboard-status">No notes match your search.</p>
         ) : (
           <ul className="notes-grid">
-            {filteredNotes.map((note) => (
+            {sortedNotes.map((note) => (
               <li key={note._id} className={`note-card ${getCardAccent(note._id)}`}>
                 <Link to={`/notes/${note._id}`} className="note-card-link">
                   <h2>{note.title}</h2>
                   <p>{stripHtml(note.content).slice(0, 120)}</p>
+                  {Array.isArray(note.tags) && note.tags.length > 0 && (
+                    <div className="note-card-tags">
+                      {note.tags.map((tag) => (
+                        <span key={tag} className={`note-card-tag ${getTagColor(tag)}`}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
                   {formatRelativeTime(note.updatedAt) && (
                     <span className="note-card-time">Edited {formatRelativeTime(note.updatedAt)}</span>
                   )}
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(note._id)}
-                  className="note-card-delete"
-                >
-                  Delete
-                </button>
+                <div className="note-card-actions">
+                  <Link
+                    to={`/notes/${note._id}`}
+                    className="note-card-icon-btn"
+                    aria-label={`Edit ${note.title}`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(note._id)}
+                    className="note-card-icon-btn danger"
+                    aria-label={`Delete ${note.title}`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+      <Toast message={toast} onDismiss={() => setToast('')} />
     </div>
   );
 }

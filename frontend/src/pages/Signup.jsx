@@ -34,54 +34,61 @@ function Signup() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-brand">
-        <span className="brand-mark" aria-hidden="true">N</span>
-        <div>
-          <div className="auth-brand-name">NovaNote</div>
-          <div className="auth-brand-tagline">Capture your thoughts, beautifully organized.</div>
+    <div className="auth-page split">
+      <div className="auth-visual">
+        <div className="auth-visual-content">
+          <span className="brand-mark brand-mark-lg" aria-hidden="true">N</span>
+          <h2>NovaNote</h2>
+          <p className="auth-visual-tagline">Capture your thoughts, beautifully organized.</p>
+          <ul className="auth-visual-features">
+            <li>Rich text notes with full formatting</li>
+            <li>Tags and instant search</li>
+            <li>Export and import anytime</li>
+          </ul>
         </div>
       </div>
-      <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Signup</h1>
+      <div className="auth-form-side">
+        <form className="auth-card" onSubmit={handleSubmit}>
+          <h1>Signup</h1>
 
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-        <label htmlFor="confirmPassword">Confirm password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
+          <label htmlFor="confirmPassword">Confirm password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
 
-        {error && <p className="auth-error">{error}</p>}
+          {error && <p className="auth-error">{error}</p>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating account...' : 'Sign up'}
-        </button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Creating account...' : 'Sign up'}
+          </button>
 
-        <p className="auth-switch">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </form>
+          <p className="auth-switch">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

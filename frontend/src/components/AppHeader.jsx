@@ -2,8 +2,13 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext.jsx';
 
+function getInitial(email) {
+  if (!email) return '?';
+  return email.charAt(0).toUpperCase();
+}
+
 function AppHeader() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -21,6 +26,9 @@ function AppHeader() {
         </span>
       </Link>
       <nav className="app-header-nav">
+        <Link to="/profile" className="app-header-avatar" aria-label="Profile">
+          {getInitial(user?.email)}
+        </Link>
         <Link to="/profile" className="app-header-link">Profile</Link>
         <button type="button" onClick={handleLogout} className="app-header-logout">
           Log out

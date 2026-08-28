@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
+import TagInput from '../components/TagInput.jsx';
 import { createNote, fetchNoteById, updateNote } from '../api/notes.js';
 
 function NoteEditor() {
@@ -12,6 +13,7 @@ function NoteEditor() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +22,7 @@ function NoteEditor() {
     if (!isEditing) {
       setTitle('');
       setContent('');
+      setTags([]);
       setError('');
       setLoading(false);
       return;
@@ -38,6 +41,7 @@ function NoteEditor() {
         }
         setTitle(note.title);
         setContent(note.content);
+        setTags(Array.isArray(note.tags) ? note.tags : []);
       } catch {
         if (active) setError('Could not load note');
       } finally {
@@ -64,9 +68,9 @@ function NoteEditor() {
     setSaving(true);
     try {
       if (isEditing) {
-        await updateNote(id, title, content);
+        await updateNote(id, title, content, tags);
       } else {
-        await createNote(title, content);
+        await createNote(title, content, tags);
       }
       navigate('/dashboard');
     } catch {
@@ -98,6 +102,7 @@ function NoteEditor() {
                 onChange={(e) => setTitle(e.target.value)}
                 className="note-title-input"
               />
+              <TagInput tags={tags} onChange={setTags} />
               <RichTextEditor content={content} onChange={setContent} />
               <div className="note-editor-actions">
                 <button type="button" onClick={handleCancel} disabled={saving} className="btn-secondary">Cancel</button>

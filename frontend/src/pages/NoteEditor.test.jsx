@@ -72,7 +72,7 @@ describe('NoteEditor', () => {
       fireEvent.click(screen.getByText('Save'));
 
       await waitFor(() => {
-        expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello');
+        expect(notesApi.createNote).toHaveBeenCalledWith('My note', 'Hello', []);
       });
     } catch (err) {
       console.error('creates a new note with title and content: assertion failed', err);

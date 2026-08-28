@@ -81,7 +81,7 @@ describe('Dashboard', () => {
     );
 
     try {
-      const deleteButton = await screen.findByText('Delete');
+      const deleteButton = await screen.findByLabelText(/delete/i);
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
@@ -236,7 +236,7 @@ describe('Dashboard', () => {
       fireEvent.change(input, { target: { files: [file] } });
 
       await waitFor(() => {
-        expect(notesApi.createNote).toHaveBeenCalledWith('Imported note', 'Imported content');
+        expect(notesApi.createNote).toHaveBeenCalledWith('Imported note', 'Imported content', []);
       });
 
       expect(await screen.findByText('Imported note')).toBeInTheDocument();
