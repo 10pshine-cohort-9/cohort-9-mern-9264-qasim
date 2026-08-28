@@ -1,0 +1,91 @@
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import RichTextEditor from '../components/RichTextEditor.jsx';
+import { createNote, fetchNoteById, updateNote } from '../api/notes.js';
+
+function NoteEditor() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = Boolean(id);
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(isEditing);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    async function loadNote() {
+      try {
+        const note = await fetchNoteById(id);
+        if (!note || typeof note.title !== 'string' || typeof note.content !== 'string') {
+          throw new Error('Invalid note data');
+        }
+        setTitle(note.title);
+        setContent(note.content);
+      } catch {
+        setError('Could not load note');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadNote();
+  }, [id, isEditing]);
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setError('');
+
+    if (!title.trim() || !content.trim()) {
+      setError('Title and content are required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (isEditing) {
+        await updateNote(id, title, content);
+      } else {
+        await createNote(title, content);
+      }
+      navigate('/dashboard');
+    } catch {
+      setError('Could not save note');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCancel() {
+    navigate('/dashboard');
+  }
+
+  if (loading) return <p className="note-editor-loading">Loading note...</p>;
+
+  return (
+    <div className="note-editor-page">
+      <h1>{isEditing ? 'Edit Note' : 'New Note'}</h1>
+      {error && <p className="auth-error">{error}</p>}
+      <form onSubmit={handleSave} className="note-editor-form">
+        <input
+          type="text"
+          placeholder="Note title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="note-title-input"
+        />
+        <RichTextEditor content={content} onChange={setContent} />
+        <div className="note-editor-actions">
+          <button type="button" onClick={handleCancel} disabled={saving}>Cancel</button>
+          <button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default NoteEditor;
