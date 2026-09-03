@@ -1,9 +1,3 @@
-// These tests connect to the same MongoDB instance used in development
-// (MONGO_URI from backend/.env) rather than an in-memory database, to avoid
-// the extra binary-download dependency of mongodb-memory-server. Test users
-// are created with a unique, timestamped email and removed again in the
-// after() hook so they don't linger in the database.
-
 require('dotenv').config();
 const mongoose = require('mongoose');
 const request = require('supertest');
@@ -13,7 +7,7 @@ const app = require('../src/app');
 const User = require('../src/models/User');
 
 const testEmail = `test-${Date.now()}@example.com`;
-const testPassword = 'password123';
+const testPassword = 'Password123!';
 
 describe('Auth routes', () => {
   before(async () => {
@@ -52,6 +46,22 @@ describe('Auth routes', () => {
 
       expect(res.status).to.equal(409);
     });
+
+    it('rejects a password shorter than 8 characters', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ email: `short-${Date.now()}@example.com`, password: 'Ab1!' });
+
+      expect(res.status).to.equal(400);
+    });
+
+    it('rejects a password without a special character', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ email: `nospecial-${Date.now()}@example.com`, password: 'Password123' });
+
+      expect(res.status).to.equal(400);
+    });
   });
 
   describe('POST /api/auth/login', () => {
@@ -79,6 +89,77 @@ describe('Auth routes', () => {
         .send({ email: `nobody-${Date.now()}@example.com`, password: testPassword });
 
       expect(res.status).to.equal(401);
+    });
+  });
+
+  describe('PUT /api/auth/profile', () => {
+    let token;
+
+    before(async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: testEmail, password: testPassword });
+      token = res.body.token;
+    });
+
+    it('rejects the request without a token', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .send({ name: 'No Auth' });
+
+      expect(res.status).to.equal(401);
+    });
+
+    it('updates the user\'s name', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Qasim Ali' });
+
+      expect(res.status).to.equal(200);
+      expect(res.body.user.name).to.equal('Qasim Ali');
+    });
+
+    it('rejects setting a new password without currentPassword', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ newPassword: 'NewPassword1!' });
+
+      expect(res.status).to.equal(400);
+    });
+
+    it('rejects a weak new password', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: testPassword, newPassword: 'weak' });
+
+      expect(res.status).to.equal(400);
+    });
+
+    it('rejects an incorrect current password', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: 'WrongCurrent1!', newPassword: 'NewPassword1!' });
+
+      expect(res.status).to.equal(401);
+    });
+
+    it('changes the password successfully and the new password works on login', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ currentPassword: testPassword, newPassword: 'NewPassword1!' });
+
+      expect(res.status).to.equal(200);
+
+      const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({ email: testEmail, password: 'NewPassword1!' });
+
+      expect(loginRes.status).to.equal(200);
     });
   });
 });

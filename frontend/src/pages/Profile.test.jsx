@@ -13,6 +13,10 @@ jest.mock('../api/notes.js', () => ({
   deleteNote: jest.fn(),
 }));
 
+jest.mock('../api/auth.js', () => ({
+  updateProfile: jest.fn(),
+}));
+
 jest.mock('../context/AuthContext.jsx', () => ({
   useAuth: jest.fn(),
 }));
@@ -22,6 +26,7 @@ describe('Profile', () => {
     useAuth.mockReturnValue({
       user: { email: 'qasim@example.com' },
       logout: jest.fn(),
+      updateUser: jest.fn(),
     });
   });
 
