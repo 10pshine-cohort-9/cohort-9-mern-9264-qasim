@@ -15,6 +15,10 @@ const noteSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    pinned: {
+      type: Boolean,
+      default: false,
+    },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
