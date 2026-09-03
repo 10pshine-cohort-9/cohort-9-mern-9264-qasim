@@ -14,6 +14,13 @@ function forbiddenError() {
   return err;
 }
 
+function normalizePinned(pinned) {
+  if (pinned === true || pinned === false) return pinned;
+  if (pinned === 'true') return true;
+  if (pinned === 'false') return false;
+  return undefined;
+}
+
 function normalizeTags(tags) {
   if (!Array.isArray(tags)) return [];
   return tags
@@ -25,7 +32,7 @@ function normalizeTags(tags) {
 
 async function createNote(req, res, next) {
   try {
-    const { title, content, tags } = req.body;
+    const { title, content, tags, pinned } = req.body;
 
     if (!title || !content) {
       const err = new Error('Title and content are required');
@@ -37,6 +44,7 @@ async function createNote(req, res, next) {
       title,
       content,
       tags: normalizeTags(tags),
+      pinned: normalizePinned(pinned) ?? false,
       owner: req.user.id,
     });
     res.status(201).json(note);
@@ -78,10 +86,12 @@ async function updateNote(req, res, next) {
     if (!note) throw notFoundError();
     if (note.owner.toString() !== req.user.id) throw forbiddenError();
 
-    const { title, content, tags } = req.body;
+    const { title, content, tags, pinned } = req.body;
     if (title !== undefined) note.title = title;
     if (content !== undefined) note.content = content;
     if (tags !== undefined) note.tags = normalizeTags(tags);
+    const normalizedPinned = normalizePinned(pinned);
+    if (normalizedPinned !== undefined) note.pinned = normalizedPinned;
 
     await note.save();
     res.json(note);

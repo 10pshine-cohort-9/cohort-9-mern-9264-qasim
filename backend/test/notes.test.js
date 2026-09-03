@@ -80,6 +80,26 @@ describe('Notes routes', () => {
       expect(res.status).to.equal(201);
       expect(res.body.tags).to.deep.equal(['work', 'urgent']);
     });
+
+    it('creates a note with pinned false by default', async () => {
+      const res = await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Unpinned note', content: 'Some content' });
+
+      expect(res.status).to.equal(201);
+      expect(res.body.pinned).to.equal(false);
+    });
+
+    it('creates a note as pinned when requested', async () => {
+      const res = await request(app)
+        .post('/api/notes')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ title: 'Pinned note', content: 'Some content', pinned: true });
+
+      expect(res.status).to.equal(201);
+      expect(res.body.pinned).to.equal(true);
+    });
   });
 
   describe('GET /api/notes', () => {
@@ -174,6 +194,16 @@ describe('Notes routes', () => {
 
       expect(res.status).to.equal(200);
       expect(res.body.tags).to.deep.equal(['personal']);
+    });
+
+    it('updates a note\'s pinned status', async () => {
+      const res = await request(app)
+        .put(`/api/notes/${noteId}`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ pinned: true });
+
+      expect(res.status).to.equal(200);
+      expect(res.body.pinned).to.equal(true);
     });
 
     it('returns 404 when updating a note that does not exist', async () => {
