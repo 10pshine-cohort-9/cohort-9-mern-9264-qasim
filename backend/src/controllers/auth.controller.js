@@ -43,7 +43,7 @@ async function register(req, res, next) {
 
     res.status(201).json({
       token,
-      user: { id: user._id, email: user.email },
+      user: { id: user._id, email: user.email, name: user.name || '' },
     });
   } catch (err) {
     next(err);
@@ -70,11 +70,55 @@ async function login(req, res, next) {
 
     res.json({
       token,
-      user: { id: user._id, email: user.email },
+      user: { id: user._id, email: user.email, name: user.name || '' },
     });
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { register, login };
+async function updateProfile(req, res, next) {
+  try {
+    checkValidation(req);
+
+    const { name, currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      const err = new Error('User not found');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (newPassword !== undefined) {
+      if (!currentPassword) {
+        const err = new Error('Current password is required to set a new password');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        const err = new Error('Current password is incorrect');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      user.password = newPassword;
+    }
+
+    if (name !== undefined) {
+      user.name = String(name).trim();
+    }
+
+    await user.save();
+
+    res.json({
+      user: { id: user._id, email: user.email, name: user.name || '' },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, updateProfile };
