@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import AppHeader from '../components/AppHeader.jsx';
 import Toast from '../components/Toast.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { createNote, deleteNote, fetchNotes } from '../api/notes.js';
+import { createNote, deleteNote, fetchNotes, togglePinned } from '../api/notes.js';
 
 function stripHtml(html) {
   const div = document.createElement('div');
@@ -34,7 +34,7 @@ function getTagColor(tag) {
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
+  if (hour < 16) return 'Good afternoon';
   return 'Good evening';
 }
 
@@ -105,6 +105,17 @@ function Dashboard() {
       setToast('Note deleted.');
     } catch {
       setError('Could not delete note');
+    }
+  }
+
+  async function handlePinToggle(note) {
+    setError('');
+    try {
+      const updated = await togglePinned(note._id, !note.pinned);
+      setNotes((prev) => prev.map((n) => (n._id === note._id ? updated : n)));
+      setToast(updated.pinned ? 'Note pinned.' : 'Note unpinned.');
+    } catch {
+      setError('Could not update pin status');
     }
   }
 
@@ -210,6 +221,7 @@ function Dashboard() {
     } else {
       arr.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
     }
+    arr.sort((a, b) => (b.pinned === true) - (a.pinned === true));
     return arr;
   }, [filteredNotes, sortBy]);
 
@@ -219,8 +231,11 @@ function Dashboard() {
       <div className="dashboard-page">
         <div className="dashboard-toolbar">
           <div>
-            <p className="dashboard-greeting">{getGreeting()}, {getDisplayName(user?.email)}</p>
+            <p className="dashboard-greeting">
+              {getGreeting()}, {getDisplayName(user?.email)}
+            </p>
             <h1>Your notes</h1>
+            <p className="dashboard-tagline">Capture the spark. Keep the thought.</p>
           </div>
           <div className="dashboard-toolbar-actions">
             <Link to="/notes/new" className="btn-primary">+ New note</Link>
@@ -287,7 +302,7 @@ function Dashboard() {
             {sortedNotes.map((note) => (
               <li key={note._id} className={`note-card ${getCardAccent(note._id)}`}>
                 <Link to={`/notes/${note._id}`} className="note-card-link">
-                  <h2>{note.title}</h2>
+                  <h2>{note.pinned && '📌 '}{note.title}</h2>
                   <p>{stripHtml(note.content).slice(0, 120)}</p>
                   {Array.isArray(note.tags) && note.tags.length > 0 && (
                     <div className="note-card-tags">
@@ -301,6 +316,16 @@ function Dashboard() {
                   )}
                 </Link>
                 <div className="note-card-actions">
+                  <button
+                    type="button"
+                    onClick={() => handlePinToggle(note)}
+                    className={`note-card-icon-btn ${note.pinned ? 'active' : ''}`}
+                    aria-label={note.pinned ? `Unpin ${note.title}` : `Pin ${note.title}`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill={note.pinned ? 'currentColor' : 'none'}>
+                      <path d="M12 2l1.5 5.5L19 9l-4.5 3.5L16 18l-4-3-4 3 1.5-5.5L5 9l5.5-1.5L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                   <Link
                     to={`/notes/${note._id}`}
                     className="note-card-icon-btn"

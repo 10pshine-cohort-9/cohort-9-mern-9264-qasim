@@ -25,18 +25,29 @@ export async function fetchNoteById(id) {
   }
 }
 
-export async function createNote(title, content, tags = []) {
+export async function createNote(title, content, tags = [], pinned = false) {
   try {
-    const res = await api.post('/api/notes', { title, content, tags });
+    const res = await api.post('/api/notes', { title, content, tags, pinned });
     return res.data;
   } catch (err) {
     throw normalizeError(err);
   }
 }
 
-export async function updateNote(id, title, content, tags = []) {
+export async function updateNote(id, title, content, tags = [], pinned) {
   try {
-    const res = await api.put(`/api/notes/${id}`, { title, content, tags });
+    const payload = { title, content, tags };
+    if (pinned !== undefined) payload.pinned = pinned;
+    const res = await api.put(`/api/notes/${id}`, payload);
+    return res.data;
+  } catch (err) {
+    throw normalizeError(err);
+  }
+}
+
+export async function togglePinned(id, pinned) {
+  try {
+    const res = await api.put(`/api/notes/${id}`, { pinned });
     return res.data;
   } catch (err) {
     throw normalizeError(err);

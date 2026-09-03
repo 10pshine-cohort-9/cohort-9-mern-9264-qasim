@@ -22,7 +22,7 @@ function AppHeader() {
         <span className="brand-mark" aria-hidden="true">N</span>
         <span className="app-header-brand-text">
           <span className="app-header-brand-name">NovaNote</span>
-          <span className="app-header-brand-tag">Personal Workspace</span>
+          <span className="app-header-brand-tag">Think it. Note it.</span>
         </span>
       </Link>
       <nav className="app-header-nav">

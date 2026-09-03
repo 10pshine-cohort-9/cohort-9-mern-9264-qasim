@@ -964,3 +964,21 @@ a {
   font-size: 0.8rem;
   text-decoration: none;
 }
+
+.note-card-icon-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.dashboard-greeting {
+  font-size: 1.35rem;
+  color: var(--text-secondary);
+}
+
+.dashboard-tagline {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-style: italic;
+  margin-top: 0.4rem;
+}
