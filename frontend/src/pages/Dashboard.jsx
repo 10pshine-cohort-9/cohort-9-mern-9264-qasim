@@ -124,6 +124,7 @@ function Dashboard() {
       title: note.title,
       content: note.content,
       tags: note.tags || [],
+      pinned: note.pinned || false,
     }));
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -214,14 +215,17 @@ function Dashboard() {
 
   const sortedNotes = useMemo(() => {
     const arr = [...filteredNotes];
-    if (sortBy === 'updated-asc') {
-      arr.sort((a, b) => new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0));
-    } else if (sortBy === 'title-asc') {
-      arr.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    } else {
-      arr.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
-    }
-    arr.sort((a, b) => (b.pinned === true) - (a.pinned === true));
+    arr.sort((a, b) => {
+      const pinDiff = (b.pinned === true) - (a.pinned === true);
+      if (pinDiff !== 0) return pinDiff;
+      if (sortBy === 'updated-asc') {
+        return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+      }
+      if (sortBy === 'title-asc') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    });
     return arr;
   }, [filteredNotes, sortBy]);
 
@@ -323,7 +327,7 @@ function Dashboard() {
                     aria-label={note.pinned ? `Unpin ${note.title}` : `Pin ${note.title}`}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill={note.pinned ? 'currentColor' : 'none'}>
-                      <path d="M12 2l1.5 5.5L19 9l-4.5 3.5L16 18l-4-3-4 3 1.5-5.5L5 9l5.5-1.5L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                      <path d="M12 17v5M9 10.5V6a3 3 0 0 1 6 0v4.5c0 .3.15.5.4.65l1.3.8c.5.3.8.85.8 1.4v.65a1 1 0 0 1-1 1H8.5a1 1 0 0 1-1-1v-.65c0-.55.3-1.1.8-1.4l1.3-.8c.25-.15.4-.35.4-.65Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
                     </svg>
                   </button>
                   <Link
