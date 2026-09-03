@@ -15,7 +15,7 @@ const Note = require('../src/models/Note');
 
 const userAEmail = `notes-test-a-${Date.now()}@example.com`;
 const userBEmail = `notes-test-b-${Date.now()}@example.com`;
-const password = 'password123';
+const password = 'Password123!';
 
 let tokenA;
 let tokenB;
