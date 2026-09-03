@@ -39,9 +39,10 @@ function getGreeting() {
   return 'Good evening';
 }
 
-function getDisplayName(email) {
-  if (!email) return '';
-  const namePart = email.split('@')[0];
+function getDisplayName(user) {
+  if (user?.name) return user.name;
+  if (!user?.email) return '';
+  const namePart = user.email.split('@')[0];
   return namePart.charAt(0).toUpperCase() + namePart.slice(1);
 }
 
@@ -278,7 +279,7 @@ function Dashboard() {
           <div className="dashboard-toolbar">
             <div>
               <p className="dashboard-greeting">
-                {getGreeting()}, {getDisplayName(user?.email)}
+                {getGreeting()}, {getDisplayName(user)}
               </p>
               <h1>{getViewTitle()}</h1>
               <p className="dashboard-tagline">Capture the spark. Keep the thought.</p>
