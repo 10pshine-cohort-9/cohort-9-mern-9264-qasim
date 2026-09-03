@@ -11,6 +11,7 @@ jest.mock('../api/notes.js', () => ({
   createNote: jest.fn(),
   updateNote: jest.fn(),
   deleteNote: jest.fn(),
+  togglePinned: jest.fn(),
 }));
 
 jest.mock('../context/AuthContext.jsx', () => ({
@@ -89,6 +90,32 @@ describe('Dashboard', () => {
       });
     } catch (err) {
       console.error('deletes a note after confirmation: assertion failed', err);
+      throw err;
+    }
+  });
+
+  test('pins a note when the pin button is clicked', async () => {
+    const note = { _id: '1', title: 'First note', content: '<p>Hello world</p>', pinned: false };
+    notesApi.fetchNotes.mockResolvedValue([note]);
+    notesApi.togglePinned.mockResolvedValue({ ...note, pinned: true });
+
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+
+    try {
+      const pinButton = await screen.findByLabelText('Pin First note');
+      fireEvent.click(pinButton);
+
+      await waitFor(() => {
+        expect(notesApi.togglePinned).toHaveBeenCalledWith('1', true);
+      });
+
+      expect(await screen.findByLabelText('Unpin First note')).toBeInTheDocument();
+    } catch (err) {
+      console.error('pins a note when the pin button is clicked: assertion failed', err);
       throw err;
     }
   });
