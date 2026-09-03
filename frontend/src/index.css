@@ -1104,3 +1104,9 @@ a {
   padding: 0.4rem 0.7rem;
   border-radius: var(--radius-sm);
 }
+
+.auth-hint {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  margin-top: -0.3rem;
+}
