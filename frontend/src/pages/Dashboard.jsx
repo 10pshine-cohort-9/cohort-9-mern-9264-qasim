@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
+import Sidebar from '../components/Sidebar.jsx';
 import Toast from '../components/Toast.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { createNote, deleteNote, fetchNotes, togglePinned } from '../api/notes.js';
@@ -71,6 +72,7 @@ function Dashboard() {
   const [sortBy, setSortBy] = useState('updated-desc');
   const [importing, setImporting] = useState(false);
   const [toast, setToast] = useState('');
+  const [activeView, setActiveView] = useState('all');
 
   useEffect(() => {
     loadNotes();
@@ -201,17 +203,43 @@ function Dashboard() {
     }
   }
 
+  const allTags = useMemo(() => {
+    const counts = {};
+    for (const note of notes) {
+      if (!Array.isArray(note.tags)) continue;
+      for (const tag of note.tags) {
+        counts[tag] = (counts[tag] || 0) + 1;
+      }
+    }
+    return Object.keys(counts)
+      .sort()
+      .map((name) => ({ name, count: counts[name], colorClass: getTagColor(name) }));
+  }, [notes]);
+
+  const pinnedCount = useMemo(() => notes.filter((note) => note.pinned).length, [notes]);
+
+  const viewFilteredNotes = useMemo(() => {
+    if (activeView === 'pinned') {
+      return notes.filter((note) => note.pinned);
+    }
+    if (activeView.startsWith('tag:')) {
+      const tagName = activeView.slice(4);
+      return notes.filter((note) => Array.isArray(note.tags) && note.tags.includes(tagName));
+    }
+    return notes;
+  }, [notes, activeView]);
+
   const filteredNotes = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return notes;
+    if (!term) return viewFilteredNotes;
 
-    return notes.filter((note) => {
+    return viewFilteredNotes.filter((note) => {
       const titleMatch = note.title?.toLowerCase().includes(term);
       const contentMatch = stripHtml(note.content || '').toLowerCase().includes(term);
       const tagMatch = Array.isArray(note.tags) && note.tags.some((tag) => tag.toLowerCase().includes(term));
       return titleMatch || contentMatch || tagMatch;
     });
-  }, [notes, searchTerm]);
+  }, [viewFilteredNotes, searchTerm]);
 
   const sortedNotes = useMemo(() => {
     const arr = [...filteredNotes];
@@ -229,134 +257,149 @@ function Dashboard() {
     return arr;
   }, [filteredNotes, sortBy]);
 
+  function getViewTitle() {
+    if (activeView === 'pinned') return 'Pinned notes';
+    if (activeView.startsWith('tag:')) return `#${activeView.slice(4)}`;
+    return 'Your notes';
+  }
+
   return (
     <div className="app-shell">
       <AppHeader />
-      <div className="dashboard-page">
-        <div className="dashboard-toolbar">
-          <div>
-            <p className="dashboard-greeting">
-              {getGreeting()}, {getDisplayName(user?.email)}
-            </p>
-            <h1>Your notes</h1>
-            <p className="dashboard-tagline">Capture the spark. Keep the thought.</p>
-          </div>
-          <div className="dashboard-toolbar-actions">
-            <Link to="/notes/new" className="btn-primary">+ New note</Link>
-            <button type="button" onClick={handleExport} className="btn-secondary" disabled={notes.length === 0}>
-              Export
-            </button>
-            <button type="button" onClick={handleImportClick} className="btn-secondary" disabled={importing}>
-              {importing ? 'Importing...' : 'Import'}
-            </button>
-            <input
-              type="file"
-              accept="application/json"
-              ref={fileInputRef}
-              onChange={handleImportFile}
-              style={{ display: 'none' }}
-              data-testid="import-file-input"
-            />
-          </div>
-        </div>
-
-        {notes.length > 0 && (
-          <div className="dashboard-controls">
-            <input
-              type="text"
-              placeholder="Search notes by title or content..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="dashboard-search-input"
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="dashboard-sort-select"
-              aria-label="Sort notes"
-            >
-              <option value="updated-desc">Recently updated</option>
-              <option value="updated-asc">Oldest first</option>
-              <option value="title-asc">Title A-Z</option>
-            </select>
-          </div>
-        )}
-
-        {error && <p className="auth-error">{error}</p>}
-
-        {loading ? (
-          <p className="dashboard-status">Loading notes...</p>
-        ) : notes.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon" aria-hidden="true">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                <path d="M14 2v5h5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                <path d="M8 12h8M8 15.5h8M8 8.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
+      <div className="dashboard-layout">
+        <Sidebar
+          activeView={activeView}
+          onSelectView={setActiveView}
+          allCount={notes.length}
+          pinnedCount={pinnedCount}
+          tags={allTags}
+        />
+        <div className="dashboard-page">
+          <div className="dashboard-toolbar">
+            <div>
+              <p className="dashboard-greeting">
+                {getGreeting()}, {getDisplayName(user?.email)}
+              </p>
+              <h1>{getViewTitle()}</h1>
+              <p className="dashboard-tagline">Capture the spark. Keep the thought.</p>
             </div>
-            <p className="empty-state-title">No notes yet</p>
-            <p className="empty-state-subtitle">Create your first note to get started.</p>
-            <Link to="/notes/new" className="btn-primary">+ New note</Link>
+            <div className="dashboard-toolbar-actions">
+              <Link to="/notes/new" className="btn-primary">+ New note</Link>
+              <button type="button" onClick={handleExport} className="btn-secondary" disabled={notes.length === 0}>
+                Export
+              </button>
+              <button type="button" onClick={handleImportClick} className="btn-secondary" disabled={importing}>
+                {importing ? 'Importing...' : 'Import'}
+              </button>
+              <input
+                type="file"
+                accept="application/json"
+                ref={fileInputRef}
+                onChange={handleImportFile}
+                style={{ display: 'none' }}
+                data-testid="import-file-input"
+              />
+            </div>
           </div>
-        ) : sortedNotes.length === 0 ? (
-          <p className="dashboard-status">No notes match your search.</p>
-        ) : (
-          <ul className="notes-grid">
-            {sortedNotes.map((note) => (
-              <li key={note._id} className={`note-card ${getCardAccent(note._id)}`}>
-                <Link to={`/notes/${note._id}`} className="note-card-link">
-                  <h2>{note.pinned && '📌 '}{note.title}</h2>
-                  <p>{stripHtml(note.content).slice(0, 120)}</p>
-                  {Array.isArray(note.tags) && note.tags.length > 0 && (
-                    <div className="note-card-tags">
-                      {note.tags.map((tag) => (
-                        <span key={tag} className={`note-card-tag ${getTagColor(tag)}`}>{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                  {formatRelativeTime(note.updatedAt) && (
-                    <span className="note-card-time">Edited {formatRelativeTime(note.updatedAt)}</span>
-                  )}
-                </Link>
-                <div className="note-card-actions">
-                  <button
-                    type="button"
-                    onClick={() => handlePinToggle(note)}
-                    className={`note-card-icon-btn ${note.pinned ? 'active' : ''}`}
-                    aria-label={note.pinned ? `Unpin ${note.title}` : `Pin ${note.title}`}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill={note.pinned ? 'currentColor' : 'none'}>
-                      <path d="M12 17v5M9 10.5V6a3 3 0 0 1 6 0v4.5c0 .3.15.5.4.65l1.3.8c.5.3.8.85.8 1.4v.65a1 1 0 0 1-1 1H8.5a1 1 0 0 1-1-1v-.65c0-.55.3-1.1.8-1.4l1.3-.8c.25-.15.4-.35.4-.65Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <Link
-                    to={`/notes/${note._id}`}
-                    className="note-card-icon-btn"
-                    aria-label={`Edit ${note.title}`}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+
+          {notes.length > 0 && (
+            <div className="dashboard-controls">
+              <input
+                type="text"
+                placeholder="Search notes by title or content..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="dashboard-search-input"
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="dashboard-sort-select"
+                aria-label="Sort notes"
+              >
+                <option value="updated-desc">Recently updated</option>
+                <option value="updated-asc">Oldest first</option>
+                <option value="title-asc">Title A-Z</option>
+              </select>
+            </div>
+          )}
+
+          {error && <p className="auth-error">{error}</p>}
+
+          {loading ? (
+            <p className="dashboard-status">Loading notes...</p>
+          ) : notes.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M14 2v5h5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M8 12h8M8 15.5h8M8 8.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <p className="empty-state-title">No notes yet</p>
+              <p className="empty-state-subtitle">Create your first note to get started.</p>
+              <Link to="/notes/new" className="btn-primary">+ New note</Link>
+            </div>
+          ) : sortedNotes.length === 0 ? (
+            <p className="dashboard-status">No notes match your search.</p>
+          ) : (
+            <ul className="notes-grid">
+              {sortedNotes.map((note) => (
+                <li key={note._id} className={`note-card ${getCardAccent(note._id)}`}>
+                  <Link to={`/notes/${note._id}`} className="note-card-link">
+                    <h2>{note.pinned && '📌 '}{note.title}</h2>
+                    <p>{stripHtml(note.content).slice(0, 120)}</p>
+                    {Array.isArray(note.tags) && note.tags.length > 0 && (
+                      <div className="note-card-tags">
+                        {note.tags.map((tag) => (
+                          <span key={tag} className={`note-card-tag ${getTagColor(tag)}`}>{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                    {formatRelativeTime(note.updatedAt) && (
+                      <span className="note-card-time">Edited {formatRelativeTime(note.updatedAt)}</span>
+                    )}
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(note._id)}
-                    className="note-card-icon-btn danger"
-                    aria-label={`Delete ${note.title}`}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <div className="note-card-actions">
+                    <button
+                      type="button"
+                      onClick={() => handlePinToggle(note)}
+                      className={`note-card-icon-btn ${note.pinned ? 'active' : ''}`}
+                      aria-label={note.pinned ? `Unpin ${note.title}` : `Pin ${note.title}`}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill={note.pinned ? 'currentColor' : 'none'}>
+                        <path d="M12 17v5M9 10.5V6a3 3 0 0 1 6 0v4.5c0 .3.15.5.4.65l1.3.8c.5.3.8.85.8 1.4v.65a1 1 0 0 1-1 1H8.5a1 1 0 0 1-1-1v-.65c0-.55.3-1.1.8-1.4l1.3-.8c.25-.15.4-.35.4-.65Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    <Link
+                      to={`/notes/${note._id}`}
+                      className="note-card-icon-btn"
+                      aria-label={`Edit ${note.title}`}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(note._id)}
+                      className="note-card-icon-btn danger"
+                      aria-label={`Delete ${note.title}`}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 6h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
       <Toast message={toast} onDismiss={() => setToast('')} />
     </div>
