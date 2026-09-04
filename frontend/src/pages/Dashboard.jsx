@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
+import { hashToIndex } from '../utils/colorHash.js';
 import Sidebar from '../components/Sidebar.jsx';
 import Toast from '../components/Toast.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -17,19 +18,11 @@ const CARD_ACCENTS = ['accent-indigo', 'accent-teal', 'accent-coral', 'accent-am
 const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plum'];
 
 function getCardAccent(id) {
-  let hash = 0;
-  for (const char of String(id)) {
-    hash = (hash + char.charCodeAt(0)) % CARD_ACCENTS.length;
-  }
-  return CARD_ACCENTS[hash];
+  return CARD_ACCENTS[hashToIndex(id, CARD_ACCENTS.length)];
 }
 
 function getTagColor(tag) {
-  let hash = 0;
-  for (const char of String(tag)) {
-    hash = (hash + char.charCodeAt(0)) % TAG_COLORS.length;
-  }
-  return TAG_COLORS[hash];
+  return TAG_COLORS[hashToIndex(tag, TAG_COLORS.length)];
 }
 
 function getGreeting() {
@@ -140,7 +133,7 @@ function Dashboard() {
     link.download = 'notes-export.json';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
     setToast('Notes exported.');
   }
@@ -161,7 +154,7 @@ function Dashboard() {
       const parsed = JSON.parse(text);
 
       if (!Array.isArray(parsed)) {
-        throw new Error('Invalid file format');
+        throw new TypeError('Invalid file format');
       }
 
       const validItems = parsed.filter(
@@ -174,7 +167,7 @@ function Dashboard() {
       );
 
       if (validItems.length === 0) {
-        throw new Error('No valid notes found in file');
+        throw new TypeError('No valid notes found in file');
       }
 
       let successCount = 0;
@@ -213,7 +206,7 @@ function Dashboard() {
       }
     }
     return Object.keys(counts)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map((name) => ({ name, count: counts[name], colorClass: getTagColor(name) }));
   }, [notes]);
 

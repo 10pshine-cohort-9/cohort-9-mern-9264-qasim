@@ -26,7 +26,9 @@ function Signup() {
     try {
       await signup(email, password);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
+      // Error details are intentionally not surfaced here; a generic
+      // message is shown to the user.
       setError('Could not create account');
     } finally {
       setLoading(false);

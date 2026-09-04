@@ -34,7 +34,7 @@ export async function createNote(title, content, tags = [], pinned = false) {
   }
 }
 
-export async function updateNote(id, title, content, tags = [], pinned) {
+export async function updateNote(id, title, content, tags = [], pinned = undefined) {
   try {
     const payload = { title, content, tags };
     if (pinned !== undefined) payload.pinned = pinned;

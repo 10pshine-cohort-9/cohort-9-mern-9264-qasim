@@ -1,13 +1,10 @@
 import { useState } from 'react';
+import { hashToIndex } from '../utils/colorHash.js';
 
 const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plum'];
 
 function getTagColor(tag) {
-  let hash = 0;
-  for (const char of String(tag)) {
-    hash = (hash + char.charCodeAt(0)) % TAG_COLORS.length;
-  }
-  return TAG_COLORS[hash];
+  return TAG_COLORS[hashToIndex(tag, TAG_COLORS.length)];
 }
 
 function TagInput({ tags, onChange }) {
