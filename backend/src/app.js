@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth.routes');
 const notesRoutes = require('./routes/notes.routes');
 
 const app = express();
+app.disable('x-powered-by');
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json());
