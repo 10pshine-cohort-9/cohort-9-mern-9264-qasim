@@ -1,6 +1,0 @@
-projectKey=NovaNote
-serverUrl=http://localhost:9000
-serverVersion=26.9.0.129388
-dashboardUrl=http://localhost:9000/dashboard?id=NovaNote
-ceTaskId=2a5b0420-6523-477b-8f84-d9ca413167f7
-ceTaskUrl=http://localhost:9000/api/ce/task?id=2a5b0420-6523-477b-8f84-d9ca413167f7
