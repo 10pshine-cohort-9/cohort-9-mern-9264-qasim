@@ -4,10 +4,10 @@ Think it. Note it.
 
 A full-stack MERN note-taking application with per-user authentication, rich text editing, tags, pinning, search, and export/import — built as part of the 10Pearls Shine MERN internship program.
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20.19+-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
-![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
 
 ## Table of Contents
 
@@ -38,9 +38,9 @@ A full-stack MERN note-taking application with per-user authentication, rich tex
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Frontend | React 19, React Router, Axios, Tiptap |
-| Backend | Node.js, Express, Mongoose |
+| Backend | Node.js, Express 4, Mongoose |
 | Database | MongoDB Atlas |
 | Auth | JSON Web Tokens (JWT), bcryptjs |
 | Logging | Pino, pino-http |
@@ -55,7 +55,7 @@ _Screenshots of the dashboard, note editor, and profile page can be added here._
 
 ### Prerequisites
 
-- Node.js 18 or later
+- Node.js 20.19 or later
 - npm
 - A MongoDB Atlas connection string (or a local MongoDB instance)
 
@@ -82,7 +82,7 @@ The frontend runs on `http://localhost:5173` by default.
 Create a `backend/.env` file based on `backend/.env.example` with the following:
 
 | Variable | Description |
-|---|---|
+| --- | --- |
 | `PORT` | Port the backend server listens on |
 | `NODE_ENV` | `development` or `production` |
 | `MONGO_URI` | MongoDB Atlas connection string |
@@ -125,7 +125,7 @@ Create a `backend/.env` file based on `backend/.env.example` with the following:
 ## API Overview
 
 | Method | Endpoint | Description |
-|---|---|---|
+| --- | --- | --- |
 | POST | `/api/auth/register` | Create a new account |
 | POST | `/api/auth/login` | Log in and receive a JWT |
 | PUT | `/api/auth/profile` | Update display name and/or change password |
@@ -140,4 +140,4 @@ All `/api/notes` and `/api/auth/profile` routes require a valid JWT in the `Auth
 
 ## Code Quality
 
-This project has been analyzed with SonarQube, covering both the backend and frontend codebases for bugs, vulnerabilities, code smells, and duplication. All identified security issues have been resolved.
+This project was analyzed locally with SonarQube (Community Edition), covering both the backend and frontend codebases for bugs, vulnerabilities, code smells, and duplication. All identified security issues were resolved as part of this development cycle.
