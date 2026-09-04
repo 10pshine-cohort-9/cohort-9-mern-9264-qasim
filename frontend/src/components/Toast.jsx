@@ -10,9 +10,9 @@ function Toast({ message, onDismiss }) {
   if (!message) return null;
 
   return (
-    <div className="toast" role="status">
+    <output className="toast">
       {message}
-    </div>
+    </output>
   );
 }
 

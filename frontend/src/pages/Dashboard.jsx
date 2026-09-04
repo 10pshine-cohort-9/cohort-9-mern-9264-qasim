@@ -19,7 +19,7 @@ const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plu
 function getCardAccent(id) {
   let hash = 0;
   for (const char of String(id)) {
-    hash = (hash + char.charCodeAt(0)) % CARD_ACCENTS.length;
+    hash = (hash + char.codePointAt(0)) % CARD_ACCENTS.length;
   }
   return CARD_ACCENTS[hash];
 }
@@ -27,7 +27,7 @@ function getCardAccent(id) {
 function getTagColor(tag) {
   let hash = 0;
   for (const char of String(tag)) {
-    hash = (hash + char.charCodeAt(0)) % TAG_COLORS.length;
+    hash = (hash + char.codePointAt(0)) % TAG_COLORS.length;
   }
   return TAG_COLORS[hash];
 }
@@ -140,7 +140,7 @@ function Dashboard() {
     link.download = 'notes-export.json';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
     setToast('Notes exported.');
   }
@@ -161,7 +161,7 @@ function Dashboard() {
       const parsed = JSON.parse(text);
 
       if (!Array.isArray(parsed)) {
-        throw new Error('Invalid file format');
+        throw new TypeError('Invalid file format');
       }
 
       const validItems = parsed.filter(
@@ -174,7 +174,7 @@ function Dashboard() {
       );
 
       if (validItems.length === 0) {
-        throw new Error('No valid notes found in file');
+        throw new TypeError('No valid notes found in file');
       }
 
       let successCount = 0;

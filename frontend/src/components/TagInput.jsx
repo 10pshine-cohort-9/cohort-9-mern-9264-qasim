@@ -5,7 +5,7 @@ const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plu
 function getTagColor(tag) {
   let hash = 0;
   for (const char of String(tag)) {
-    hash = (hash + char.charCodeAt(0)) % TAG_COLORS.length;
+    hash = (hash + char.codePointAt(0)) % TAG_COLORS.length;
   }
   return TAG_COLORS[hash];
 }

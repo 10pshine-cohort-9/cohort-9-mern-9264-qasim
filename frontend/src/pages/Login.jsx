@@ -20,7 +20,9 @@ function Login() {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
+      // Error details are intentionally not surfaced to avoid leaking
+      // whether the failure was due to a bad email or bad password.
       setError('Invalid email or password');
     } finally {
       setLoading(false);
