@@ -213,7 +213,7 @@ function Dashboard() {
       }
     }
     return Object.keys(counts)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map((name) => ({ name, count: counts[name], colorClass: getTagColor(name) }));
   }, [notes]);
 
