@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
+import { hashToIndex } from '../utils/colorHash.js';
 import Sidebar from '../components/Sidebar.jsx';
 import Toast from '../components/Toast.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -17,19 +18,11 @@ const CARD_ACCENTS = ['accent-indigo', 'accent-teal', 'accent-coral', 'accent-am
 const TAG_COLORS = ['tag-indigo', 'tag-teal', 'tag-coral', 'tag-amber', 'tag-plum'];
 
 function getCardAccent(id) {
-  let hash = 0;
-  for (const char of String(id)) {
-    hash = (hash + char.codePointAt(0)) % CARD_ACCENTS.length;
-  }
-  return CARD_ACCENTS[hash];
+  return CARD_ACCENTS[hashToIndex(id, CARD_ACCENTS.length)];
 }
 
 function getTagColor(tag) {
-  let hash = 0;
-  for (const char of String(tag)) {
-    hash = (hash + char.codePointAt(0)) % TAG_COLORS.length;
-  }
-  return TAG_COLORS[hash];
+  return TAG_COLORS[hashToIndex(tag, TAG_COLORS.length)];
 }
 
 function getGreeting() {
