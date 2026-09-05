@@ -27,7 +27,7 @@ function Signup() {
       await signup(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Could not create account');
+      setError(err?.response?.data?.message || 'Could not create account');
     } finally {
       setLoading(false);
     }
@@ -68,6 +68,7 @@ function Signup() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <p className="auth-hint">At least 8 characters, including one special character.</p>
 
           <label htmlFor="confirmPassword">Confirm password</label>
           <input
